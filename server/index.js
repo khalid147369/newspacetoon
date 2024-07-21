@@ -1,6 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
-// import {}from "./"
+// import CLIENTID  from "./config.js";
 import cors from "cors";
 import multer from "multer";
 import path from "path";
@@ -20,13 +20,14 @@ import Outhstratigie from "passport-google-oauth2";
 import { clientSecret } from "firebase-tools/lib/api.js";
 Outhstratigie.Strategy;
 const clientId = process.env.CLIENTID;
-const clientsecret = "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";
+const clientsecret = process.env.CLIENTSECRET;
 // ---------------google-imports
+
 const app = express();
 const port = 3000;
 mongoose.connect(process.env.CONECT_LINK);
 app.use(express.json());
-app.use(cors())
+app.use(cors());
 app.use(express.static("public"));
 
 //   ---------------------------------------
@@ -154,14 +155,13 @@ app.use(
     methods: "POST , GET , PUT , DELETE",
     credentials: true,
   })
-  
 );
 
 // --------------------google---------------------->
 
 app.use(
   session({
-    secret:"ircmid944443304fmmf",
+    secret: process.env.SESSIONSECRET,
     resave: false,
     // saveUnitialized :"true"
     saveUninitialized: true,
@@ -213,48 +213,41 @@ app.get(
     failureRedirect: `http://localhost:5173/login`,
   })
 );
-let userid = ""
+let userid = "";
 app.get("/login/success", async (req, res) => {
-  try{ 
+  try {
     // console.log(req.user)
-    userid = req.user
-    res.status(200).json(req.user); 
- 
-  }catch(err){
-    res.status(401).json({message :"failed to send user data"});
+    userid = req.user;
+    res.status(200).json(req.user);
+  } catch (err) {
+    res.status(401).json({ message: "failed to send user data" });
 
- console.log(err)
+    console.log(err);
   }
-  
 });
-app.get("/logout",(req , res , next)=>{
-  req.logout(function(err){
+app.get("/logout", (req, res, next) => {
+  req.logout(function (err) {
     if (err) {
-      return next(err)
-
+      return next(err);
     }
-    res.redirect(`http://localhost:5173/`)
-  })  
-})
+    res.redirect(`http://localhost:5173/`);
+  });
+});
 // app.use(googlefav)
 import fav from "./modules/favgoogle.js";
 app.post("/favorites2", async (req, res) => {
- 
-  
-  
-   try { 
-   
+  try {
     // const user_id = req.user._id;
-    const { name } = req.body;  
-    const tit = await fav.findOne({ title: name ,user_id : userid._id });
+    const { name } = req.body;
+    const tit = await fav.findOne({ title: name, user_id: userid._id });
 
     if (tit) {
-      return res.status(401).json({message :" card alredy exist"})
+      return res.status(401).json({ message: " card alredy exist" });
     }
     const newcard = new fav({
       title: req.body.name,
-      user_id :userid._id,
-      imgname: req.body.image, 
+      user_id: userid._id,
+      imgname: req.body.image,
       audsrc: req.body.audio,
     });
 
@@ -268,7 +261,7 @@ app.post("/favorites2", async (req, res) => {
 
 app.get("/chousedfav2", async (req, res) => {
   try {
-    const userrid = userid._id; 
+    const userrid = userid._id;
     const chousedcard = await fav.find({ user_id: userrid });
     res.json(chousedcard);
   } catch (err) {
@@ -279,24 +272,23 @@ app.get("/chousedfav2", async (req, res) => {
 app.delete("/deletecard2/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    await fav.findByIdAndDelete(id); 
+    await fav.findByIdAndDelete(id);
     res.status(200).json({ message: "song has been deleted" });
   } catch (err) {
     console.log(err);
     res.status(401).json({ message: "song does not deleted" });
   }
 });
-app.get("/api/itemsfavgoogle/:id",async(req,res)=>{
-  try{
-const {id} = req.params
- const card = await fav.findById(id)
-  res.status(200).json(card)
-  }catch(err){
-console.log(err)
-res.status(401).json({message: "data dosnt send"})
+app.get("/api/itemsfavgoogle/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const card = await fav.findById(id);
+    res.status(200).json(card);
+  } catch (err) {
+    console.log(err);
+    res.status(401).json({ message: "data dosnt send" });
   }
- 
-})
+});
 
 // --------------------google---------------------->
 app.use(Favorites);
